@@ -6,19 +6,18 @@ import (
 	"io/ioutil"
 	"net/http"
 )
-const(
+
+const (
 	// TD endpoint
-	BaseUrl = "https://api.tdameritrade.com/v1/marketdata/"
-	QuoteSuffix  = "/data?apikey="
+	BaseUrl     = "https://api.tdameritrade.com/v1/marketdata/"
+	QuoteSuffix = "/quotes?apikey="
 )
 
-
-
-type QuoteProvider struct{
+type QuoteProvider struct {
 	Endpoint string
 }
 
-func NewQuoteProvider(apiKey,ticker string) *QuoteProvider{
+func NewQuoteProvider(apiKey, ticker string) *QuoteProvider {
 	return &QuoteProvider{
 		Endpoint: BaseUrl + ticker + QuoteSuffix + apiKey,
 	}
@@ -26,40 +25,38 @@ func NewQuoteProvider(apiKey,ticker string) *QuoteProvider{
 
 func (q *QuoteProvider) GetData() *Quote {
 	var quote Quote
-	resp, err  := http.Get(q.Endpoint)
-	if err != nil{
+	resp, err := http.Get(q.Endpoint)
+	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil{
-		logrus.Error("ERROR reading body : %d",err)
+	if err != nil {
+		logrus.Error("ERROR reading body : %d", err)
 		return nil
 	}
 
-	err = json.Unmarshal(body,&quote)
-	if err != nil{
-		logrus.Error("ERROR unmarshal data")
+	err = json.Unmarshal(body, &quote)
+	if err != nil {
+		logrus.Errorf("ERROR unmarshal data: %s", err.Error())
 		return nil
 	}
 
 	return &quote
 }
 
-
 // TODO add support for different tickers, not just SPXL
 type SimpleTDQuote struct {
-	BidPrice float64 `json:"bidPrice"`
-	BidSize  int `json:"bidSize"`
-	AskPrice float64 `json:"askPrice"`
-	AskSize  int `json:"askSize"`
-	TotalVolume   int `json:"totalVolume"`
+	BidPrice    float64 `json:"bidPrice"`
+	BidSize     int     `json:"bidSize"`
+	AskPrice    float64 `json:"askPrice"`
+	AskSize     int     `json:"askSize"`
+	TotalVolume int     `json:"totalVolume"`
 }
 
-
 type Quote struct {
-	Symbol struct{
+	Symbol struct {
 		AssetType                          string  `json:"assetType"`
 		AssetMainType                      string  `json:"assetMainType"`
 		Cusip                              string  `json:"cusip"`
@@ -109,6 +106,4 @@ type Quote struct {
 		RegularMarketPercentChangeInDouble float64 `json:"regularMarketPercentChangeInDouble"`
 		Delayed                            bool    `json:"delayed"`
 	} `json:"SPXL"`
-
 }
-
