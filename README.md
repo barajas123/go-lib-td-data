@@ -1,4 +1,4 @@
-#go-lib-td-data
+## go-lib-td-data
 Allows the use of the TD Ameritrade API to get delayed/real-time data(candles, quotes) with your account. 
 
 ## Getting Price History
