@@ -5,41 +5,41 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 const (
 	HistorySuffix   = "/pricehistory?apikey="
+	periodType = "&periodType=ytd"
+	frequencyType = "&frequencyType=daily"
 	startDateSuffix = "&startDate="
-	debugDate       = "1590154200000"
+	start = "1578321000000"
 )
 
-type HistoryPayload struct {
-	Candles []struct {
-		Open     float64 `json:"open"`
-		High     float64 `json:"high"`
-		Low      float64 `json:"low"`
-		Close    float64 `json:"close"`
-		Volume   int     `json:"volume"`
-		Datetime int     `json:"datetime"`
-	} `json:"candles"`
-	Symbol string `json:"symbol"`
-	Empty  bool   `json:"empty"`
-}
-
 type HistoryProvider struct {
-	StartDate time.Time
+	Ticker string
+	APIKey string
+	StartDate string
 	EndPoint  string
 }
 
 func NewHistoryProvider(apiKey, ticker string) *HistoryProvider {
-	t := time.Unix(1589808600000, 0)
-	endPoint := BaseUrl + ticker + HistorySuffix + apiKey + startDateSuffix + debugDate
+	t := start // set to 01/06/2020
+	endPoint := BaseUrl + ticker + HistorySuffix + apiKey + startDateSuffix + t
 	return &HistoryProvider{
+		Ticker: ticker,
+		APIKey: apiKey,
 		StartDate: t,
 		EndPoint:  endPoint,
 	}
 }
+
+// ChangeStartDate changes the start date for the api call , takes in unix time stamp since epoch
+func (hp *HistoryProvider)ChangeStartDate(newTime string){
+	hp.StartDate = newTime
+	hp.EndPoint = BaseUrl + hp.Ticker + HistorySuffix + hp.APIKey + startDateSuffix + hp.StartDate
+}
+
+//GetData returns HistoryPayload type
 func (h *HistoryProvider) GetData() *HistoryPayload {
 	var payload HistoryPayload
 	resp, err := http.Get(h.EndPoint)
@@ -59,4 +59,18 @@ func (h *HistoryProvider) GetData() *HistoryPayload {
 		logrus.Errorf("ERROR unmarshal data", err)
 	}
 	return &payload
+}
+
+
+type HistoryPayload struct{
+	Candles []struct {
+		Open     float64 `json:"open"`
+		High     float64 `json:"high"`
+		Low      float64 `json:"low"`
+		Close    float64 `json:"close"`
+		Volume   int `json:"volume"`
+		Datetime int `json:"datetime"`
+	} `json:"candles"`
+	Symbol string `json:"symbol"`
+	Empty bool `json:"empty"`
 }
